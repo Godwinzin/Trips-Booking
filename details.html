@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Destination Details - Wandervia</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Leaflet CSS & JS CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">Wandervia</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="search.html">Explore</a></li>
+      <li><a href="saved.html">Saved</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="details-layout">
+      <!-- Main Content -->
+      <section id="destination-details">
+        <!-- Details render dynamically via JS -->
+      </section>
+
+      <!-- Sidebar Booking Widget -->
+      <aside class="booking-widget">
+        <h3 id="widget-price">$0 / total</h3>
+        <br>
+        <form id="booking-form">
+          <div class="filter-group">
+            <label for="checkin">Check-in</label>
+            <input type="date" id="checkin" required style="width: 100%;">
+          </div>
+          <div class="filter-group">
+            <label for="guests">Guests</label>
+            <input type="number" id="guests" value="1" min="1" style="width: 100%;">
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem;">Reserve Spot</button>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Wandervia Travel Project.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

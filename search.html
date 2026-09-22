@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Destinations - Wandervia</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="/Images/icon.png" type="image/x-icon">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">Wandervia</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="search.html">Explore</a></li>
+      <li><a href="saved.html">Saved</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="search-layout">
+      <!-- Sidebar Filters -->
+      <aside class="filters">
+        <h3>Filter Results</h3>
+        <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
+        
+        <div class="filter-group">
+          <label for="price-range">Max Price ($)</label>
+          <input type="range" id="price-range" min="100" max="2000" step="50" value="2000" oninput="this.nextElementSibling.value = '$' + this.value">
+          <output>$2000</output>
+        </div>
+
+        <div class="filter-group">
+          <label>Category</label>
+          <label><input type="checkbox" class="category-filter" value="Beach"> Beach</label>
+          <label><input type="checkbox" class="category-filter" value="Mountain"> Mountain</label>
+          <label><input type="checkbox" class="category-filter" value="City"> City</label>
+        </div>
+      </aside>
+
+      <!-- Results Grid -->
+      <section>
+        <h2 id="search-title">Showing All Destinations</h2>
+        <br>
+        <div class="grid" id="search-results">
+          <!-- Filtered items will render here -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Wandervia Travel.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
