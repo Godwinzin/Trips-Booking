@@ -15,7 +15,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 wandervia/
