@@ -9,14 +9,29 @@
 </head>
 <body>
 
-  <nav class="navbar">
-    <a href="index.html" class="logo">Wandervia</a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="search.html">Explore</a></li>
-      <li><a href="saved.html">Saved</a></li>
-    </ul>
-  </nav>
+ <nav class="navbar">
+  <a href="index.html" class="logo-link">
+    <img src="Images/logo.png" alt="Wandervia Logo" class="logo-img">
+    <span class="logo-text">Wandervia</span>
+  </a>
+  
+  <!-- Mobile Hamburger Button -->
+  <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" class="navactive">Home</a></li>
+    <li><a href="search.html">Explore</a></li>
+    <li><a href="saved.html">Saved</a></li>
+    <li><a href="bookings.html">My Bookings</a></li>
+  </ul>
+</nav>
+
+<!-- Container for Toast Notifications -->
+<div id="toast-container"></div>
 
   <header class="hero">
     <h1>Discover Your Next Adventure</h1>
@@ -34,10 +49,68 @@
     </div>
   </main>
 
-  <footer>
-    <p>&copy; 2026 Wandervia Travel</p>
-  </footer>
+  <footer class="site-footer">
+    <div class="footer-container">
+        <div class="footer-col">
+            <a href="index.html" class="logo-link">
+                <img src="Images/icon.png" alt="Wandervia Logo" class="logo-img">
+                <span class="logo-text">Wandervia</span>
+            </a>
+            <p style="margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">
+                Discover and reserve your next adventure seamlessly.
+            </p>
+        </div>
 
+        <div class="footer-col">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li><a href="saved.html">Saved</a></li>
+                <li><a href="bookings.html">My Bookings</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <h4>Connect With Us</h4>
+            
+            <div class="contact-item">
+                <span>WhatsApp:</span>
+                <a href="https://wa.me/254123478" target="_blank" rel="noopener">+254712345678</a>
+            </div>
+            <div class="contact-item">
+                <span>Email:</span>
+                <a href="mailto:support@exploreglobe.com">support@wandervia.com</a>
+            </div>
+
+            <div class="social-links">
+
+                <a href="https://wa.me/254712345678" target="_blank" aria-label="WhatsApp" class="social-icon">
+                    <img src="Images/WhatsApp_icon.png" alt="WhatsApp Icon" style="width: 22px; height: 22px;">
+                </a>
+
+                <a href="https://facebook.com" target="_blank" aria-label="Facebook" class="social-icon">
+                <img src="Images/Facebook_Logo.png" alt="Facebook Icon" style="width: 22px; height: 22px;">
+                </a>
+
+                <a href="https://instagram.com" target="_blank" aria-label="Instagram" class="social-icon">
+                <img src="Images/instagram.png" alt="Instagram Icon" style="width: 35px; height: 35px;">
+                </a>
+
+                <a href="https://x.com" target="_blank" aria-label="X" class="social-icon">
+                <img src="Images/x.png" alt="X Icon" style="width: 22px; height: 22px;">
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; <span id="year"></span> Wandervia. All rights reserved.</p>
+    </div>
+</footer>
+
+  <script src="destinations.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

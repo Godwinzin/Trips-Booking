@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Saved Destinations - Wandervia</title>
+  <title>My Bookings - Wandervia</title>
   <link rel="stylesheet" href="style.css">
   <link rel="shortcut icon" href="/Images/icon.png" type="image/x-icon">
 </head>
 <body>
+  <div id="toast-container"></div>
 
+  <!-- Navigation -->
   <nav class="navbar">
   <a href="index.html" class="logo-link">
     <img src="Images/logo.png" alt="Wandervia Logo" class="logo-img">
@@ -25,22 +27,16 @@
   <ul class="nav-links" id="nav-links">
     <li><a href="index.html">Home</a></li>
     <li><a href="search.html">Explore</a></li>
-    <li><a href="saved.html" class="navactive">Saved</a></li>
-    <li><a href="bookings.html">My Bookings</a></li>
+    <li><a href="saved.html">Saved</a></li>
+    <li><a href="bookings.html" class="navactive">My Bookings</a></li>
   </ul>
 </nav>
 
-<!-- Container for Toast Notifications -->
-<div id="toast-container"></div>
-
-  <main class="container">
-    <h2 class="section-title">Your Saved Wishlist</h2>
-    <div class="grid" id="saved-results"></div>
+  <!-- Bookings Content -->
+  <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <h1>My Reserved Spots</h1>
+    <div id="bookings-results" class="grid-container" style="margin-top: 1.5rem;"></div>
   </main>
-
-  <footer>
-    <p>&copy; <span id="year"></span> Wandervia Travels</p>
-  </footer>
 
   <script src="destinations.js"></script>
   <script src="app.js"></script>

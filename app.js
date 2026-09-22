@@ -1,56 +1,10 @@
 let activeMap = null;
 const UNSPLASH_ACCESS_KEY = 'XnapbKsXLLo7N828wdQE631T1qoobKxiqJocVIMSVFE';
-// Mock dataset (Acts as our temporary database/API response)
-const MOCK_DESTINATIONS = [
-  {
-    id: '1',
-    title: 'Kyoto Cultural Tour',
-    category: 'City',
-    location: 'Japan',
-    price: 450,
-    rating: 4.9,
-    lat: 35.0116,
-    lon: 135.7681,
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
-    description: 'Explore ancient temples, traditional tea houses, and vibrant bamboo groves in Kyoto.'
-  },
-  {
-    id: '2',
-    title: 'Santorini Sunset Retreat',
-    category: 'Beach',
-    location: 'Greece',
-    price: 850,
-    rating: 4.8,
-    lat: 36.3932,
-    lon: 25.4615,
-    image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80',
-    description: 'Experience whitewashed architecture overlooking breathtaking Aegean views.'
-  },
-  {
-    id: '3',
-    title: 'Swiss Alps Hiking Adventure',
-    category: 'Mountain',
-    location: 'Switzerland',
-    price: 1200,
-    rating: 4.9,
-    lat: 46.5197,
-    lon: 8.4237,
-    image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=600&q=80',
-    description: 'Traverse scenic mountain passes, alpine lakes, and stay in classic chalet lodges.'
-  },
-  {
-    id: '4',
-    title: 'Bali Tropical Getaway',
-    category: 'Beach',
-    location: 'Indonesia',
-    price: 350,
-    rating: 4.7,
-    lat: -8.4095,
-    lon: 115.1889,
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
-    description: 'Relax in private villas surrounded by lush rainforests and serene ocean beaches.'
-  }
-];
+
+const yearSpan = document.getElementById('year');
+if (yearSpan) {
+  yearSpan.textContent = new Date().getFullYear();
+}
 
 // Helper: Generate card HTML with Favorite Heart Button
 function createCardHTML(item) {
@@ -60,7 +14,9 @@ function createCardHTML(item) {
   return `
     <div class="card">
       <div style="position: relative;">
-        <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')">
+        <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')" loading="lazy"
+        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';"
+        >
         <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${item.id}')" title="Save to Favorites">
           ♥
         </button>
@@ -73,17 +29,62 @@ function createCardHTML(item) {
     </div>
   `;
 }
+// Global function to cancel a reservation
+window.cancelBooking = function(event, id) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  // 1. Remove from localStorage
+  let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+  bookings = bookings.filter(b => String(b.id) !== String(id));
+  localStorage.setItem('bookings', JSON.stringify(bookings));
+
+  // 2. Target the clicked button and update UI
+  const btn = event.currentTarget || event.target;
+  if (btn) {
+    btn.innerText = 'Cancelled';
+    btn.disabled = true;
+    btn.style.backgroundColor = '#9e9e9e';
+    btn.style.color = '#ffffff';
+    btn.style.borderColor = '#9e9e9e';
+    btn.style.cursor = 'not-allowed';
+  }
+
+  // 3. Update the 'Confirmed' badge to 'Cancelled'
+  const card = btn.closest('.booking-card');
+  if (card) {
+    const badge = card.querySelector('.status-badge');
+    if (badge) {
+      badge.innerText = 'Cancelled';
+      badge.style.background = '#d32f2f';
+    }
+  }
+
+  // 4. Feedback toast (if available)
+  if (typeof showToast === 'function') {
+    showToast('Reservation cancelled', 'info');
+  }
+};
+
 
 // Global toggle for favorites using localStorage
 function toggleFavorite(event, id) {
   event.stopPropagation(); // Prevents clicking the card link
   
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+  
+  // Find item title for a clearer message (optional)
+  const item = MOCK_DESTINATIONS.find(d => String(d.id) === String(id));
+  const title = item ? item.title : 'Destination';
 
   if (favorites.includes(id)) {
     favorites = favorites.filter(favId => favId !== id);
+    showToast(`Removed "${title}" from saved favorites`, 'info');
   } else {
     favorites.push(id);
+    showToast(`Added "${title}" to saved favorites!`, 'success');
   }
 
   localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -92,7 +93,7 @@ function toggleFavorite(event, id) {
   btn.classList.toggle('active');
 
   // Re-render if user is on saved.html
-  if (window.location.pathname.endsWith('saved.html')) {
+  if (window.location.pathname.includes('saved.html')) {
     renderSavedPage();
   }
 }
@@ -101,13 +102,49 @@ function toggleFavorite(event, id) {
 function viewDetails(id) {
   window.location.href = `details.html?id=${id}`;
 }
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, 3000);
+}
 
 // Page Router / Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // A. Mobile Hamburger Menu Listener
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const navLinks = document.getElementById('nav-links');
+
+  if (hamburgerBtn && navLinks) {
+    hamburgerBtn.addEventListener('click', () => {
+      hamburgerBtn.classList.toggle('active');
+      navLinks.classList.toggle('active');
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburgerBtn.classList.remove('active');
+        navLinks.classList.remove('active');
+      });
+    });
+  }
+
   const path = window.location.pathname;
   if (path.endsWith('saved.html')) {
     renderSavedPage();
   }
+  
 
   // 1. Home Page Logic
   if (path.endsWith('index.html') || path.endsWith('/')) {
@@ -185,13 +222,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Details Page Logic
  // Details Page Router Block
-  if (path.endsWith('details.html')) {
+  if (window.location.pathname.includes('details.html')) {
     const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const destination = MOCK_DESTINATIONS.find(item => item.id === id) || MOCK_DESTINATIONS[0];
+    const id = urlParams.get('id') || "1";
+    const destination = MOCK_DESTINATIONS.find(item => String(item.id) === String(id)) || MOCK_DESTINATIONS[0];
 
     const detailsContainer = document.getElementById('destination-details');
     const priceWidget = document.getElementById('widget-price');
+    const reserveBtn = document.getElementById('reserve-btn');
+    const dateInput = document.getElementById('checkin');
+
+  if (dateInput) {
+    // Calculate 5 days from today
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 5);
+
+    // Format date as YYYY-MM-DD
+    const minDateString = minDate.toISOString().split('T')[0];
+
+    // Restrict date input
+    dateInput.min = minDateString;
+  }
+
+    if (reserveBtn) {
+      reserveBtn.onclick = (e) => {
+        e.preventDefault();
+
+        // 1. Get existing bookings or initialize empty array
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+        // 2. Prevent duplicate bookings for the same item
+        const alreadyBooked = bookings.some(b => String(b.id) === String(destination.id));
+
+        if (alreadyBooked) {
+          showToast(`You have already reserved a spot for ${destination.title}!`, 'info');
+          return;
+        }
+
+        // 3. Add booking with active date timestamp
+        bookings.push({
+          id: destination.id,
+          bookedAt: new Date().toLocaleDateString()
+        });
+
+        localStorage.setItem('bookings', JSON.stringify(bookings));
+        showToast(`Spot successfully reserved for ${destination.title}!`, 'success');
+      };
+    }
+    
 
     if (detailsContainer) {
       // 1. Initial render with fallback static image
@@ -235,6 +313,56 @@ document.addEventListener('DOMContentLoaded', () => {
       priceWidget.innerText = `$${destination.price} / total`;
     }
   }
+
+  // Render Booked Spots Page
+// GLOBAL: Render Reserved Bookings
+function renderBookingsPage() {
+  const bookingsContainer = document.getElementById('bookings-results');
+  if (!bookingsContainer) return;
+
+  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+  const bookedIds = bookings.map(b => String(b.id));
+
+  const bookedItems = MOCK_DESTINATIONS.filter(item => 
+    bookedIds.includes(String(item.id))
+  );
+
+  if (bookedItems.length === 0) {
+    bookingsContainer.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--gray);">
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">You have no active reservations yet.</p>
+        <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 0.6rem 1.2rem; display: inline-block;">Explore Destinations</a>
+      </div>
+    `;
+  } else {
+    bookingsContainer.innerHTML = bookedItems.map(item => {
+      const bookingInfo = bookings.find(b => String(b.id) === String(item.id));
+      return `
+        <div class="card booking-card">
+          <div style="position: relative;">
+            <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')">
+            <span class="status-badge" style="position: absolute; top: 12px; right: 12px; background: #2e7d32; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">
+              Confirmed
+            </span>
+          </div>
+          <div class="card-content">
+            <h3>${item.title}</h3>
+            <p style="color: var(--gray); font-size: 0.9rem; margin: 0;">📍 ${item.location}</p>
+            <div style="margin: 0.5rem 0; font-size: 0.85rem; color: #555; background: #f8f9fa; padding: 8px 12px; border-radius: 6px;">
+              <span><strong>Reserved:</strong> ${bookingInfo ? bookingInfo.bookedAt : 'Recently'}</span>
+            </div>
+            <p class="card-price" style="margin-bottom: 1rem;">$${item.price} <span style="font-size: 0.8rem; font-weight: normal; color: var(--gray);">/ total</span></p>
+            <button class="btn-secondary" onclick="cancelBooking(event, '${item.id}')">Cancel Reservation</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+if (window.location.pathname.includes('bookings.html')) {
+    renderBookingsPage();
+  }
+
 
   function renderSavedPage() {
     const savedContainer = document.getElementById('saved-results');
