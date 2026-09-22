@@ -279,3 +279,9 @@ footer {
   font-weight: bold;
   color: var(--primary);
 }
+#map {
+  width: 100%;
+  height: 320px; /* REQUIRED for Leaflet to render */
+  border-radius: var(--radius);
+  margin-top: 1rem;
+}
