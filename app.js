@@ -1,12 +1,13 @@
 let activeMap = null;
 const UNSPLASH_ACCESS_KEY = 'XnapbKsXLLo7N828wdQE631T1qoobKxiqJocVIMSVFE';
 
+// Set current year in footer
 const yearSpan = document.getElementById('year');
 if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
 }
 
-// Helper: Generate card HTML with Favorite Heart Button
+// Global Helper: Generate exact Card HTML used on Home Page
 function createCardHTML(item) {
   const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
   const isFav = favorites.includes(item.id);
@@ -15,7 +16,7 @@ function createCardHTML(item) {
     <div class="card">
       <div style="position: relative;">
         <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')" loading="lazy"
-        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';"
+          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';"
         >
         <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${item.id}')" title="Save to Favorites">
           ♥
@@ -29,7 +30,8 @@ function createCardHTML(item) {
     </div>
   `;
 }
-// Global function to cancel a reservation
+
+// Global Function: Cancel Reservation
 window.cancelBooking = function(event, id) {
   if (event) {
     event.stopPropagation();
@@ -41,41 +43,88 @@ window.cancelBooking = function(event, id) {
   bookings = bookings.filter(b => String(b.id) !== String(id));
   localStorage.setItem('bookings', JSON.stringify(bookings));
 
-  // 2. Target the clicked button and update UI
-  const btn = event.currentTarget || event.target;
-  if (btn) {
-    btn.innerText = 'Cancelled';
-    btn.disabled = true;
-    btn.style.backgroundColor = '#9e9e9e';
-    btn.style.color = '#ffffff';
-    btn.style.borderColor = '#9e9e9e';
-    btn.style.cursor = 'not-allowed';
-  }
+  // 2. Refresh Bookings page
+  renderBookingsPage();
 
-  // 3. Update the 'Confirmed' badge to 'Cancelled'
-  const card = btn.closest('.booking-card');
-  if (card) {
-    const badge = card.querySelector('.status-badge');
-    if (badge) {
-      badge.innerText = 'Cancelled';
-      badge.style.background = '#d32f2f';
-    }
-  }
-
-  // 4. Feedback toast (if available)
+  // 3. Feedback Toast
   if (typeof showToast === 'function') {
     showToast('Reservation cancelled', 'info');
   }
 };
 
+// GLOBAL: Render Reserved Bookings
+function renderBookingsPage() {
+  const bookingsContainer = document.getElementById('bookings-results');
+  if (!bookingsContainer) return;
 
-// Global toggle for favorites using localStorage
+  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+  const bookedIds = bookings.map(b => String(b.id));
+
+  const bookedItems = MOCK_DESTINATIONS.filter(item => 
+    bookedIds.includes(String(item.id))
+  );
+
+  if (bookedItems.length === 0) {
+    bookingsContainer.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--gray);">
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">You have no active reservations yet.</p>
+        <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 0.6rem 1.2rem; display: inline-block; border-radius: var(--radius);">Explore Destinations</a>
+      </div>
+    `;
+  } else {
+    bookingsContainer.innerHTML = bookedItems.map(item => {
+      const bookingInfo = bookings.find(b => String(b.id) === String(item.id));
+      const guests = bookingInfo && bookingInfo.guests ? bookingInfo.guests : 1;
+      const displayPrice = bookingInfo && bookingInfo.totalPrice ? bookingInfo.totalPrice : item.price;
+
+      return `
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <div class="card">
+            <div style="position: relative;">
+              <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')" loading="lazy"
+                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';"
+              >
+              <!-- Confirmed Status Badge -->
+              <span class="status-badge">Confirmed</span>
+            </div>
+            <div class="card-content" onclick="viewDetails('${item.id}')">
+              <h3 class="card-title">${item.title}</h3>
+              <p style="color: var(--gray);">${item.location}</p>
+              <div style="margin: 0.4rem 0; font-size: 0.85rem; color: #555; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+                <strong>Reserved:</strong> ${bookingInfo ? bookingInfo.bookedAt : 'Recently'} • <strong>${guests} ${guests > 1 ? 'Guests' : 'Guest'}</strong>
+              </div>
+              <p class="card-price">$${displayPrice} <span style="font-size: 0.8rem; font-weight: normal; color: var(--gray);">/ total</span></p>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="cancelBooking(event, '${item.id}')" style="background-color: var(--secondary); border-radius: var(--radius); padding: 0.5rem; width: 100%; cursor: pointer;">
+            Cancel Reservation
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// Global Function: Render Saved Page
+function renderSavedPage() {
+  const savedContainer = document.getElementById('saved-results');
+  if (!savedContainer) return;
+
+  const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+  const savedItems = MOCK_DESTINATIONS.filter(item => favorites.includes(item.id));
+
+  if (savedItems.length === 0) {
+    savedContainer.innerHTML = '<p>You haven\'t saved any destinations yet. Click the heart icon on any card to save it here!</p>';
+  } else {
+    savedContainer.innerHTML = savedItems.map(createCardHTML).join('');
+  }
+}
+
+// Global Toggle Favorites
 function toggleFavorite(event, id) {
-  event.stopPropagation(); // Prevents clicking the card link
+  event.stopPropagation();
   
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-  
-  // Find item title for a clearer message (optional)
   const item = MOCK_DESTINATIONS.find(d => String(d.id) === String(id));
   const title = item ? item.title : 'Destination';
 
@@ -90,18 +139,19 @@ function toggleFavorite(event, id) {
   localStorage.setItem('favorites', JSON.stringify(favorites));
 
   const btn = event.currentTarget;
-  btn.classList.toggle('active');
+  if (btn) btn.classList.toggle('active');
 
-  // Re-render if user is on saved.html
   if (window.location.pathname.includes('saved.html')) {
     renderSavedPage();
   }
 }
 
-// Navigate to details page with query parameters
+// Global Navigation Handler
 function viewDetails(id) {
   window.location.href = `details.html?id=${id}`;
 }
+
+// Global Toast Handler
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -120,9 +170,9 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// Page Router / Initialization
+// DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // A. Mobile Hamburger Menu Listener
+  // Mobile Hamburger Menu
   const hamburgerBtn = document.getElementById('hamburger-btn');
   const navLinks = document.getElementById('nav-links');
 
@@ -141,12 +191,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const path = window.location.pathname;
-  if (path.endsWith('saved.html')) {
+
+  // Bookings Page Execution
+  if (path.includes('bookings.html')) {
+    renderBookingsPage();
+  }
+
+  // Saved Page Execution
+  if (path.includes('saved.html')) {
     renderSavedPage();
   }
-  
 
-  // 1. Home Page Logic
+  // Home Page Execution
   if (path.endsWith('index.html') || path.endsWith('/')) {
     const popularContainer = document.getElementById('popular-destinations');
     if (popularContainer) {
@@ -163,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2. Search Page Logic
-  if (path.endsWith('search.html')) {
+  // Search Page Execution
+  if (path.includes('search.html')) {
     const resultsContainer = document.getElementById('search-results');
     const priceSlider = document.getElementById('price-range');
     const categoryCheckboxes = document.querySelectorAll('.category-filter');
@@ -172,57 +228,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = urlParams.get('query') || '';
 
-    if (searchQuery) {
-      document.getElementById('search-title').innerText = `Search results for "${searchQuery}"`;
+    const searchTitle = document.getElementById('search-title');
+    if (searchQuery && searchTitle) {
+      searchTitle.innerText = `Search results for "${searchQuery}"`;
     }
 
-    // Function to apply search query, price filter, AND category filters together
     function filterDestinations() {
-      const maxPrice = parseFloat(priceSlider.value);
+      if (!resultsContainer) return;
+      const maxPrice = priceSlider ? parseFloat(priceSlider.value) : Infinity;
       
-      // Get array of selected categories (e.g., ['Beach', 'Mountain'])
       const selectedCategories = Array.from(categoryCheckboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.value);
 
       const filtered = MOCK_DESTINATIONS.filter(item => {
-        // 1. Text search match
         const matchesSearch = !searchQuery || 
           item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-        // 2. Price match
         const matchesPrice = item.price <= maxPrice;
-
-        // 3. Category match (if none checked, match all)
         const matchesCategory = selectedCategories.length === 0 || 
           selectedCategories.includes(item.category);
 
         return matchesSearch && matchesPrice && matchesCategory;
       });
 
-      // Render updated list
       resultsContainer.innerHTML = filtered.length > 0 
         ? filtered.map(createCardHTML).join('') 
         : '<p>No destinations found matching your criteria.</p>';
     }
 
-    // Attach event listeners to slider and checkboxes
-    if (priceSlider) {
-      priceSlider.addEventListener('input', filterDestinations);
-    }
-    
-    categoryCheckboxes.forEach(cb => {
-      cb.addEventListener('change', filterDestinations);
-    });
+    if (priceSlider) priceSlider.addEventListener('input', filterDestinations);
+    categoryCheckboxes.forEach(cb => cb.addEventListener('change', filterDestinations));
 
-    // Run once on initial page load
     filterDestinations();
   }
 
-  // 3. Details Page Logic
- // Details Page Router Block
-  if (window.location.pathname.includes('details.html')) {
+  // Details Page Execution
+  if (path.includes('details.html')) {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id') || "1";
     const destination = MOCK_DESTINATIONS.find(item => String(item.id) === String(id)) || MOCK_DESTINATIONS[0];
@@ -231,48 +274,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceWidget = document.getElementById('widget-price');
     const reserveBtn = document.getElementById('reserve-btn');
     const dateInput = document.getElementById('checkin');
+    const guestsInput = document.getElementById('guests');
 
-  if (dateInput) {
-    // Calculate 5 days from today
-    const minDate = new Date();
-    minDate.setDate(minDate.getDate() + 5);
+    // Function to calculate dynamic total price
+    function updateTotalPrice() {
+      const guestCount = guestsInput ? Math.max(1, parseInt(guestsInput.value) || 1) : 1;
+      const totalPrice = destination.price * guestCount;
 
-    // Format date as YYYY-MM-DD
-    const minDateString = minDate.toISOString().split('T')[0];
+      if (priceWidget) {
+        priceWidget.innerHTML = `$${totalPrice} <span style="font-size: 0.85rem; font-weight: normal; color: var(--gray);">(${guestCount} ${guestCount > 1 ? 'guests' : 'guest'})</span>`;
+      }
+      return totalPrice;
+    }
 
-    // Restrict date input
-    dateInput.min = minDateString;
-  }
+    // Initial price setup
+    updateTotalPrice();
+
+    // Recalculate price when guest count changes
+    if (guestsInput) {
+      guestsInput.addEventListener('input', updateTotalPrice);
+      guestsInput.addEventListener('change', updateTotalPrice);
+    }
+
+    if (dateInput) {
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + 5);
+      dateInput.min = minDate.toISOString().split('T')[0];
+    }
 
     if (reserveBtn) {
       reserveBtn.onclick = (e) => {
         e.preventDefault();
-
-        // 1. Get existing bookings or initialize empty array
         let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
 
-        // 2. Prevent duplicate bookings for the same item
         const alreadyBooked = bookings.some(b => String(b.id) === String(destination.id));
-
         if (alreadyBooked) {
           showToast(`You have already reserved a spot for ${destination.title}!`, 'info');
           return;
         }
 
-        // 3. Add booking with active date timestamp
+        const guestCount = guestsInput ? Math.max(1, parseInt(guestsInput.value) || 1) : 1;
+        const calculatedPrice = destination.price * guestCount;
+
         bookings.push({
           id: destination.id,
-          bookedAt: new Date().toLocaleDateString()
+          bookedAt: new Date().toLocaleDateString(),
+          guests: guestCount,
+          totalPrice: calculatedPrice
         });
 
         localStorage.setItem('bookings', JSON.stringify(bookings));
         showToast(`Spot successfully reserved for ${destination.title}!`, 'success');
       };
     }
-    
 
     if (detailsContainer) {
-      // 1. Initial render with fallback static image
       detailsContainer.innerHTML = `
         <h1>${destination.title}</h1>
         <p style="color: var(--gray); margin-bottom: 1rem;">${destination.location} • ★ ${destination.rating}</p>
@@ -293,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      // 2. Fetch live photos asynchronously from Unsplash and update the gallery
       fetchDestinationImage(destination.location, destination.image).then(liveImageUrl => {
         const img1 = document.getElementById('gallery-img-1');
         if (img1) img1.src = liveImageUrl;
@@ -304,80 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (img2) img2.src = liveImageUrl;
       });
 
-      // 3. Fetch weather and render map
       fetchDestinationWeather(destination.lat, destination.lon);
       renderMap(destination.lat, destination.lon, destination.title, destination.location);
     }
-
-    if (priceWidget) {
-      priceWidget.innerText = `$${destination.price} / total`;
-    }
   }
+});
 
-  // Render Booked Spots Page
-// GLOBAL: Render Reserved Bookings
-function renderBookingsPage() {
-  const bookingsContainer = document.getElementById('bookings-results');
-  if (!bookingsContainer) return;
-
-  const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-  const bookedIds = bookings.map(b => String(b.id));
-
-  const bookedItems = MOCK_DESTINATIONS.filter(item => 
-    bookedIds.includes(String(item.id))
-  );
-
-  if (bookedItems.length === 0) {
-    bookingsContainer.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--gray);">
-        <p style="font-size: 1.1rem; margin-bottom: 1rem;">You have no active reservations yet.</p>
-        <a href="index.html" class="btn-primary" style="text-decoration: none; padding: 0.6rem 1.2rem; display: inline-block;">Explore Destinations</a>
-      </div>
-    `;
-  } else {
-    bookingsContainer.innerHTML = bookedItems.map(item => {
-      const bookingInfo = bookings.find(b => String(b.id) === String(item.id));
-      return `
-        <div class="card booking-card">
-          <div style="position: relative;">
-            <img src="${item.image}" alt="${item.title}" onclick="viewDetails('${item.id}')">
-            <span class="status-badge" style="position: absolute; top: 12px; right: 12px; background: #2e7d32; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">
-              Confirmed
-            </span>
-          </div>
-          <div class="card-content">
-            <h3>${item.title}</h3>
-            <p style="color: var(--gray); font-size: 0.9rem; margin: 0;">📍 ${item.location}</p>
-            <div style="margin: 0.5rem 0; font-size: 0.85rem; color: #555; background: #f8f9fa; padding: 8px 12px; border-radius: 6px;">
-              <span><strong>Reserved:</strong> ${bookingInfo ? bookingInfo.bookedAt : 'Recently'}</span>
-            </div>
-            <p class="card-price" style="margin-bottom: 1rem;">$${item.price} <span style="font-size: 0.8rem; font-weight: normal; color: var(--gray);">/ total</span></p>
-            <button class="btn-secondary" onclick="cancelBooking(event, '${item.id}')">Cancel Reservation</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-}
-if (window.location.pathname.includes('bookings.html')) {
-    renderBookingsPage();
-  }
-
-
-  function renderSavedPage() {
-    const savedContainer = document.getElementById('saved-results');
-    if (!savedContainer) return;
-
-    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    const savedItems = MOCK_DESTINATIONS.filter(item => favorites.includes(item.id));
-
-    if (savedItems.length === 0) {
-      savedContainer.innerHTML = '<p>You haven\'t saved any destinations yet. Click the heart icon on any card to save it here!</p>';
-    } else {
-      savedContainer.innerHTML = savedItems.map(createCardHTML).join('');
-    }
-  }
-  async function fetchDestinationWeather(lat, lon) {
+// Weather API Fetch
+async function fetchDestinationWeather(lat, lon) {
   const weatherContainer = document.getElementById('weather-info');
   if (!weatherContainer) return;
 
@@ -400,17 +389,17 @@ if (window.location.pathname.includes('bookings.html')) {
     weatherContainer.innerHTML = '<p>Weather data unavailable.</p>';
   }
 }
+
+// Leaflet Map Rendering
 function renderMap(lat, lon, title, locationName) {
   const mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
+  if (!mapContainer || typeof L === 'undefined') return;
 
-  // Destroy previous map instance if it exists
   if (activeMap) {
     activeMap.remove();
     activeMap = null;
   }
 
-  // Initialize new map
   activeMap = L.map('map').setView([lat, lon], 12);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -422,16 +411,13 @@ function renderMap(lat, lon, title, locationName) {
     .bindPopup(`<b>${title}</b><br>${locationName}`)
     .openPopup();
 
-  // Force map to redraw correctly after DOM render
   setTimeout(() => {
     if (activeMap) activeMap.invalidateSize();
   }, 100);
 }
 
-
-// Fetch a live image URL from Unsplash based on location search
+// Unsplash Image Fetch
 async function fetchDestinationImage(query, fallbackUrl) {
-  // If no key is set yet, return the static mock image
   if (UNSPLASH_ACCESS_KEY === 'YOUR_UNSPLASH_ACCESS_KEY') {
     return fallbackUrl;
   }
@@ -442,7 +428,6 @@ async function fetchDestinationImage(query, fallbackUrl) {
     );
     const data = await response.json();
     
-    // Return regular image URL if found, otherwise return fallback
     if (data.results && data.results.length > 0) {
       return data.results[0].urls.regular;
     }
@@ -452,4 +437,3 @@ async function fetchDestinationImage(query, fallbackUrl) {
     return fallbackUrl;
   }
 }
-});
